@@ -1,0 +1,3 @@
+[submodule "DRL-robot-navigation"]
+	path = DRL-robot-navigation
+	url = https://github.com/reiniscimurs/DRL-robot-navigation.git
