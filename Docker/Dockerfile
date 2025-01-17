@@ -48,7 +48,15 @@ RUN mkdir -p src
 ENV ROS_HOSTNAME=localhost \
     ROS_MASTER_URI=http://localhost:11311 \
     ROS_PORT_SIM=11311 \
-    GAZEBO_RESOURCE_PATH=/catkin_ws/src/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
+    GAZEBO_RESOURCE_PATH=~/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
+
+RUN pip3 install squaternion    
+
+RUN apt-get install -y \ 
+    libgl1-mesa-glx \ 
+    libgl1-mesa-dri \ 
+    mesa-utils \
+    x11-xserver-utils
 
 # Expose necessary ports
 EXPOSE 11311 6006

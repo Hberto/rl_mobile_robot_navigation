@@ -11,7 +11,7 @@ services:
       - "11311:11311"
       - "6006:6006"
     volumes:
-      - ./DRL-robot-navigation:/catkin_ws/src/DRL-robot-navigation
+      - ../DRL-robot-navigation/:/catkin_ws/src/DRL-robot-navigation/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
     tty: true
     environment:
@@ -19,6 +19,6 @@ services:
       - ROS_MASTER_URI=http://localhost:11311
       - ROS_PORT_SIM=11311
       - GAZEBO_RESOURCE_PATH=/catkin_ws/src/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
-      - DISPLAY=$DISPLAY
+      - DISPLAY=${DISPLAY}
       - QT_X11_NO_MITSHM=1
     network_mode: host

@@ -1,6 +1,8 @@
 
 # ROS2
-
+./deep-rl-navigation/DRL_robot_navigation_ros2/build
+./deep-rl-navigation/DRL_robot_navigation_ros2/install
+./deep-rl-navigation/DRL_robot_navigation_ros2//log
 build/
 install/
 log/

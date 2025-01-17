@@ -1,3 +1,6 @@
 [submodule "DRL-robot-navigation"]
 	path = DRL-robot-navigation
 	url = https://github.com/reiniscimurs/DRL-robot-navigation.git
+[submodule "deep-rl-navigation"]
+	path = deep-rl-navigation
+	url = https://github.com/vishweshvhavle/deep-rl-navigation.git
