@@ -25,7 +25,9 @@ tba.
 ## Credits
 This project is based on the following sources:
 - [DRL-robot-navigation](https://github.com/reiniscimurs/DRL-robot-navigation?tab=readme-ov-file)
+
 - [Paper](https://arxiv.org/abs/2103.07119)
+
 - [DRL-robot-navigation-ROS2](https://github.com/vishweshvhavle/deep-rl-navigation)
 
 
