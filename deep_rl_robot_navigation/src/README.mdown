@@ -1,0 +1,39 @@
+
+# How to start train
+```bash
+source ../install/setup.bash
+# Start test node
+ros2 launch td3 training_simulation.launch.py
+# Start Robot State Publisher
+ros2 launch td3 robot_state_publisher.launch.py
+# Start TD3 Simu
+ros2 launch td3 training_simulation.launch.py
+```
+
+# How to start test
+```bash
+source ../install/setup.bash
+# Start test node
+python3 ./src/td3/scripts/test_velodyne_node.py
+# Start Robot State Publisher
+ros2 launch td3 robot_state_publisher.launch.py
+# Start TD3 Simu
+ros2 launch td3 test_simulation.launch.py
+```
+
+# How to view frames
+```bash
+ros2 run tf2_tools view_frames
+evince yourframe.pdf 
+```
+
+
+# How to kill everything
+```bash
+killall -9 robot_state_publisher gzclient gazebo rviz2
+ps aux | grep -i ros2
+ps aux | grep -i gazebo
+ps aux | grep -i controller
+```
+
+
