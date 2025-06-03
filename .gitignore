@@ -1,13 +1,28 @@
 
-# ROS2
-./deep-rl-navigation/DRL_robot_navigation_ros2/build
-./deep-rl-navigation/DRL_robot_navigation_ros2/install
-./deep-rl-navigation/DRL_robot_navigation_ros2//log
+# ========== ROS 2 / colcon build ==========
 build/
 install/
 log/
 
-# DRL_robot_navigation_ros2
-DRL_robot_navigation_ros2/src/td3/launch/DRL_robot_navigation_ros2/
-DRL_robot_navigation_ros2/src/td3/scripts/__pycache__/
-results_DRL/
+
+# ========== Python‐Artefacts ==========
+# Byte‐compiled / optimized / DLL files
+__pycache__
+*.pyc
+dist/
+*.egg-info/
+share/
+
+# C extensions
+*.so
+
+# ========== IDE / Editor ==========
+.vscode/
+.idea/
+*.swp
+*.swo
+*~ 
+
+
+# ========== TensorBoard / Evaluation ==========
+evaluation/run/events.out.tfevents*
