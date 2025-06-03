@@ -30,6 +30,16 @@ This project is based on the following sources:
 
 - [DRL-robot-navigation-ROS2](https://github.com/vishweshvhavle/deep-rl-navigation)
 
+## TODOS
+- [ ] impl basic modular structure
+- [ ] adjust package.xml and cmake_list
+- [ ] read about robot state publisher
+- [ ] read paper about lstm navigation
+- [ ] seperate nodes to odom, gazebo env, velodyne node
+- [ ] params should be seperated or in config.yaml
+- [ ] lstm model seperation
+
+
 
 
 
