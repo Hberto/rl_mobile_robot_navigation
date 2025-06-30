@@ -21,6 +21,7 @@ FILE_NAME = "td3_velodyne"  # File name to store policy
 SAVE_MODEL = True  # Whether to save the model
 LOAD_MODEL = False  # Whether to load a stored model
 RANDOM_NEAR_OBSTACLE = True  # Take random actions near obstacles
+HISTORY_LENGTH = 40 # Saving the last 40 states
 
 # Hyperparameters and environment constants
 GOAL_REACHED_DIST = 0.5
