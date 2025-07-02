@@ -30,14 +30,20 @@ This project is based on the following sources:
 
 - [DRL-robot-navigation-ROS2](https://github.com/vishweshvhavle/deep-rl-navigation)
 
+- [Transformer TD3 Base model](https://link.springer.com/article/10.1007/s11370-025-00620-2)
+
 ## TODOS
-- [ ] impl basic modular structure
-- [ ] adjust package.xml and cmake_list
-- [ ] read about robot state publisher
-- [ ] read paper about lstm navigation
-- [ ] seperate nodes to odom, gazebo env, velodyne node
-- [ ] params should be seperated or in config.yaml
-- [ ] lstm model seperation
+- [x] impl basic modular structure
+- [x] adjust package.xml and cmake_list
+- [x] read about robot state publisher
+- [x] read paper about lstm navigation
+- [x] seperate nodes to odom, gazebo env, velodyne node
+- [x] params should be seperated or in config.yaml
+- [ ] read about transformer td3
+- [ ] impl transformer td3
+- [ ] docker ros2
+- [ ] test and evaluate transformer td3
+- [ ] optimize transformer td3
 
 
 
