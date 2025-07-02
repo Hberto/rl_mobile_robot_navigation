@@ -1,4 +1,4 @@
-FROM ros:humble-desktop
+FROM osrf/ros:humble-desktop
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -27,14 +27,14 @@ RUN apt-get update && apt-get install -y \
 RUN pip3 install --no-cache-dir \
     squaternion \
     numpy \
-    torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121 \
-    tensorboard
+    tensorboard \
+    torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Create workspace
 WORKDIR /ros2_ws
 
 RUN . /opt/ros/humble/setup.sh && \
-    rosdep init && \
+    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
     rosdep update
 
 # Entry point
