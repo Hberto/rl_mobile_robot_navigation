@@ -4,8 +4,10 @@ import threading
 import os
 import torch
 import numpy as np
-from agent.td3.td3 import td3
-from agent.td3.replay_buffer import ReplayBuffer
+from collections import deque
+
+from agent.td3_transformer.td3 import td3
+from agent.td3_transformer.replay_historic_buffer import ReplayBuffer
 from config import config
 from evaluation.evaluation import evaluate
 
@@ -32,9 +34,21 @@ def main():
     env = GazeboEnv()
      
     # Create the network
-    network = td3(state_dim, action_dim, max_action, env)
+    network = td3(
+        state_dim=state_dim,
+        action_dim=action_dim,
+        max_action=max_action,
+        env=env,
+        history_size=config.HISTORY_LENGTH,
+        model_dim=config.MODEL_DIM,
+        nhead=config.N_HEADS,
+        num_encoder_layers=config.N_ENCODER_LAYERS
+    )
+    
     # Create a replay buffer
-    replay_buffer = ReplayBuffer(config.BUFFER_SIZE, config.SEED)
+    replay_buffer = ReplayBuffer(config.BUFFER_SIZE, config.HISTORY_LENGTH, config.SEED)
+    history_deque = deque(maxlen=config.HISTORY_LENGTH)
+    
     if config.LOAD_MODEL:
         try:
             env.get_logger().info("Will load existing model.")
@@ -44,13 +58,11 @@ def main():
      
     # Create evaluation data store
     evaluations = []
-
     timestep = 0
     timesteps_since_eval = 0
     episode_num = 0
     done = True
     epoch = 1
-
     count_rand_actions = 0
     random_action = []
     
@@ -60,14 +72,26 @@ def main():
     executor_thread = threading.Thread(target=executor.spin, daemon=True)
     executor_thread.start()
     
+    # Reset and Init
+    state = env.reset()
+    done = False 
+    episode_timesteps = 0
+    episode_reward = 0
+
+
+    history_deque = deque(maxlen=config.HISTORY_LENGTH)
+    for _ in range(config.HISTORY_LENGTH):
+        history_deque.append(state)
+    
     try:
         while rclpy.ok():
             if timestep < config.MAX_TIMESTEPS:
                 # On termination of episode
                 if done:
-                    env.get_logger().info(f"Done. timestep : {timestep}")
-                    if timestep != 0:
-                        env.get_logger().info(f"train")
+                    if timestep != 0 and replay_buffer.size() > config.BATCH_SIZE + config.HISTORY_LENGTH:
+                        env.get_logger().info(f"Done. timestep : {timestep}")
+                       
+                        env.get_logger().info(f"Training for {episode_timesteps} iterations...")
                         network.train(
                         replay_buffer,
                         episode_timesteps,
@@ -79,33 +103,39 @@ def main():
                         config.POLICY_FREQ,
                         )
 
-                    if timesteps_since_eval >= config.EVAL_FREQ:
-                        env.get_logger().info("Validating")
-                        timesteps_since_eval %= config.EVAL_FREQ
-                        evaluations.append(
-                            evaluate(network=network, epoch=epoch, eval_episodes=config.EVAL_EP, env=env)
-                        )
-                        if config.SAVE_MODEL:
-                            model_path = config.PYTORCH_MODELS_DIR
-                            network.save(config.FILE_NAME, directory=model_path)
-                        # Save evaluation
-                        path = os.path.join(config.RESULTS_DIR, config.FILE_NAME + ".npy")
-                        np.save(path, np.array(evaluations))
-                        epoch += 1
-                        env.get_logger().info(f"Epoch: {epoch}")
+                        if timesteps_since_eval >= config.EVAL_FREQ:
+                            env.get_logger().info("Validating")
+                            timesteps_since_eval %= config.EVAL_FREQ
+                            evaluations.append(
+                                evaluate(network=network, epoch=epoch, eval_episodes=config.EVAL_EP, env=env)
+                            )
+                            if config.SAVE_MODEL:
+                                model_path = config.PYTORCH_MODELS_DIR
+                                network.save(config.FILE_NAME, directory=model_path)
+                            # Save evaluation
+                            path = os.path.join(config.RESULTS_DIR, config.FILE_NAME + ".npy")
+                            np.save(path, np.array(evaluations))
+                            epoch += 1
+                            env.get_logger().info(f"Epoch: {epoch}")
 
-                    state = env.reset()
-                    done = False
-
-                    episode_reward = 0
-                    episode_timesteps = 0
-                    episode_num += 1
+                        state = env.reset()
+                        done = False
+                        episode_reward = 0
+                        episode_timesteps = 0
+                        episode_num += 1
+                        
+                        history_deque.clear()
+                        for _ in range(config.HISTORY_LENGTH):
+                            history_deque.append(state)
 
                 # add some exploration noise
                 if config.EXPL_NOISE > config.EXPL_MIN:
                     config.EXPL_NOISE = config.EXPL_NOISE - ((1 - config.EXPL_MIN) / config.EXPL_DECAY_STEPS)
-
-                action = network.get_action(np.array(state))
+                
+                history = np.array(history_deque)
+                
+                action = network.get_action(np.array(state), history)
+                
                 action = (action + np.random.normal(0, config.EXPL_NOISE, size=action_dim)).clip(
                      -max_action, max_action
                 )
@@ -143,16 +173,21 @@ def main():
                 # Save the tuple in replay buffer
                 replay_buffer.add(state, action, reward, done_bool, next_state)
 
-                # Update the counters
+                # Update state and history
                 state = next_state
+                history_deque.append(next_state)
+                
+                # Update the counters                
                 episode_timesteps += 1
                 timestep += 1
                 timesteps_since_eval += 1
 
     except KeyboardInterrupt:
+        env.get_logger().info("Keyboard interrupt, shutting down.")
         pass
 
     rclpy.shutdown()
+    executor_thread.join()
             
     
 
