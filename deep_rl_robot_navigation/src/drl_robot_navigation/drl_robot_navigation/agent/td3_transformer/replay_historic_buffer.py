@@ -4,6 +4,9 @@ Data structure to save also historic states for the transformer encoder.
 
 import random
 from collections import deque
+import torch
+
+from config.config import DEVICE
 
 import numpy as np
 
@@ -21,7 +24,15 @@ class ReplayBuffer(object):
     def sample_batch(self, batch_size):
         states, actions, rewards, dones, next_states = [], [], [], [], []
         histories, next_histories = [], []
+        
+        if len(self.buffer) < self.history_size + 1:
+            return None 
+        
         valid_indices = range(self.history_size, len(self.buffer))
+        actual_batch_size = min(batch_size, len(valid_indices))
+        if actual_batch_size == 0:
+            return None
+        
         sampled_indices = random.sample(valid_indices, batch_size)
         
         for i in sampled_indices:
@@ -35,13 +46,21 @@ class ReplayBuffer(object):
 
             states.append(s_i)
             actions.append(a_i)
-            rewards.append(r_i)
-            dones.append(d_i)
+            rewards.append([r_i])
+            dones.append([d_i])
             next_states.append(ns_i)
             histories.append(h_i)
             next_histories.append(nh_i)
             
-        return states, actions, rewards, dones, next_states, histories, next_histories
+        return (
+            torch.from_numpy(np.array(states)).float().to(DEVICE),
+            torch.from_numpy(np.array(actions)).float().to(DEVICE),
+            torch.from_numpy(np.array(rewards)).float().to(DEVICE),
+            torch.from_numpy(np.array(dones)).float().to(DEVICE),
+            torch.from_numpy(np.array(next_states)).float().to(DEVICE),
+            torch.from_numpy(np.array(histories)).float().to(DEVICE),
+            torch.from_numpy(np.array(next_histories)).float().to(DEVICE)
+        )
         
         
     def clear(self):

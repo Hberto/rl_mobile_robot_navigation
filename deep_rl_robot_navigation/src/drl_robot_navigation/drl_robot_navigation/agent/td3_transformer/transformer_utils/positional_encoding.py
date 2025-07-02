@@ -15,4 +15,4 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('positional_encoding', positional_encoding.unsqueeze(0))
         
     def forward(self, x):
-        return x + self.pe[:, :x.size(1)]
+        return x + self.positional_encoding[:, :x.size(1)]

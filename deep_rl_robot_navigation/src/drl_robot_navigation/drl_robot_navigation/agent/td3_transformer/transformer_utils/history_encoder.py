@@ -10,7 +10,7 @@ class HistoryEncoder(nn.Module):
         
         self.model_dim = model_dim
         self.embedding = nn.Linear(state_dim, model_dim)
-        self.positional_encoder = PositionalEncoding(model_dim=model_dim, max_seq_length=history_size)
+        self.positional_encoder = PositionalEncoding(d_model=model_dim, max_seq_length=history_size)
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, history_batch):
