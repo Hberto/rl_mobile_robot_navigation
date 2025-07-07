@@ -13,6 +13,13 @@ from evaluation.evaluation import evaluate
 
 def main():
     rclpy.init(args=None)
+
+    # Check GPU
+    if torch.cuda.is_available():
+        print(f"GPU found! Training will be applied on '{config.DEVICE}'")
+        print(f"Name: {torch.cuda.get_device_name(0)}")
+    else:
+        print(f"No GPU found. Training is running on '{config.DEVICE}' instead.")
     
     # Add Configs
       # Create the network storage folders
@@ -107,7 +114,7 @@ def main():
                             env.get_logger().info("Validating")
                             timesteps_since_eval %= config.EVAL_FREQ
                             evaluations.append(
-                                evaluate(network=network, epoch=epoch, eval_episodes=config.EVAL_EP, env=env)
+                                evaluate(network=network, epoch=epoch, env=env, history_size=config.HISTORY_LENGTH, eval_episodes=config.EVAL_EP)
                             )
                             if config.SAVE_MODEL:
                                 model_path = config.PYTORCH_MODELS_DIR
