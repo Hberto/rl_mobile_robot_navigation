@@ -225,7 +225,6 @@ class GazeboEnv(Node):
         self.total_episodes += 1
 
         # Resets the state of the environment and returns an initial observation.
-        #rospy.wait_for_service("/gazebo/reset_world")
         while not self.reset_proxy.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('reset : service not available, waiting again...')
 
@@ -240,15 +239,13 @@ class GazeboEnv(Node):
         max_attempts = 50
         attempt = 0
         while not position_ok and attempt < max_attempts:
-            #x = np.random.uniform(-4.5, 4.5)
-            #y = np.random.uniform(-4.5, 4.5)
             x = np.random.uniform(MAZE_MIN_X + 0.5, MAZE_MAX_X - 0.5)  # 0.5m margin from walls
             y = np.random.uniform(MAZE_MIN_Y + 0.5, MAZE_MAX_Y - 0.5)
             position_ok = check_pos(x, y)
             attempt += 1
         if not position_ok:
             x, y = (MAZE_MAX_X - MAZE_MIN_X)/2, (MAZE_MAX_Y - MAZE_MIN_Y)/2  # Center
-            self.get_logger().warn(f"⚠️ Using center position ({x:.1f}, {y:.1f})")
+            self.get_logger().warn(f"Using center position ({x:.1f}, {y:.1f})")
         
         angle = np.random.uniform(-np.pi, np.pi)
         quaternion = Quaternion.from_euler(0.0, 0.0, angle)
@@ -261,7 +258,6 @@ class GazeboEnv(Node):
         object_state.pose.orientation.z = quaternion.z
         object_state.pose.orientation.w = quaternion.w
         self.get_logger().info(f"New robot position: ({x}, {y})")
-        #self.set_state.publish(object_state)
 
         self.set_state.publish(object_state)
         time.sleep(1)
@@ -339,17 +335,11 @@ class GazeboEnv(Node):
         MAZE_MAX_X = 4.4
         MAZE_MIN_Y = -3.0
         MAZE_MAX_Y = 1.9
-        # Updated to match SDF ground plane coverage
         #MAZE_MIN_X = -4.5  # Extended from -3.8
         #MAZE_MAX_X= 4.5   # Extended from 3.8
         #MAZE_MIN_Y = -3.0   # Adjusted from -2.9
         #MAZE_MAX_Y = 3.0    # Extended from 1.5
 
-        #[INFO] [1741604917.518130227] [env]: GOAL with success_rate X: -0.5747097301337947, GOAL Y with success_rate: 0.5294583322601398
-
-
-
-        # Dynamische Ziele basierend auf letzter Performance
         if self.success_rate <= 0.3:
                 for _ in range(50):
                     self.goal_x = np.clip(self.odom_x + np.random.uniform(-0.1, 0.1), 
@@ -361,7 +351,6 @@ class GazeboEnv(Node):
                         return
 
         else:
-            # Feste herausfordernde Ziele
             #fixed_goals = [            
             #(2.4, -0.1),   # Central region (from log)
             #(1.7, -2.0),  # Central-lower region
@@ -486,36 +475,26 @@ class GazeboEnv(Node):
             return True, True, min_laser
         return False, False, min_laser
 
-    #@staticmethod
     def get_reward(self, target, collision, action, min_laser, distance):
         if target:
-            self.get_logger().info("reward 100")
-            return 100.0
+            self.get_logger().info("reward 200")
+            return 200.0
         elif collision:
             self.get_logger().info("reward -100")
             return -100.0
-        else:
-            #r3 = lambda x: 1 - x if x < 1 else 0.0
-            #return action[0] / 2 - abs(action[1]) / 2 - r3(min_laser) / 2
+        current_dist_to_goal = math.hypot(self.odom_x - self.goal_x, self.odom_y - self.goal_y)
+        progress_reward = 10.0 * (distance - current_dist_to_goal)
 
-            # Keep strong forward movement reward
-            linear_speed_reward = action[0] / 2  
+        obstacle_penalty = 0
+        if min_laser < 1.0:
+            obstacle_penalty = -0.5 * math.exp(-min_laser * 2)
 
-            # Keep strong rotation penalty
-            rotation_penalty = -abs(action[1]) / 2  
+        rotation_penalty = -0.1 * abs(action[1])
 
-            # Keep strong obstacle avoidance penalty
-            #obstacle_repulsion = - (1 - min_laser) / 2 
-            obstacle_repulsion = - (1 - min_laser) * 10 
+        time_penalty = -0.1
 
-            # Distance-based reward: Higher reward when closer to the goal
-            # with small: 10
-            #goal_proximity_reward = 20.0 / (distance + 1e-3)  # Avoid division by zero
-            goal_proximity_reward = 50.0 / (distance + 1e-3)
-
-            # Total reward calculation
-            reward = linear_speed_reward + rotation_penalty + obstacle_repulsion + goal_proximity_reward
-            return reward
+        reward = progress_reward + obstacle_penalty + rotation_penalty + time_penalty
+        return reward
         
     ### helpers ###    
     def get_current_pose(self):
@@ -545,44 +524,16 @@ def check_pos(x, y):
     Checks if the given (x, y) position is valid by ensuring that:
       1. It is within the maze boundaries.
       2. It does not fall inside any of the obstacles defined by wall bounding boxes.
-    Maze boundaries (manually determined):
-      x: [0.0, 3.9]
-      y: [-2.8, 1.6]
-    Walls are defined as tuples: (wall_center_x, wall_center_y, width, thickness)
-    where width is the size along the x-axis and thickness along the y-axis.
+    Maze boundaries (manually determined)
     """
-    # Maze boundaries based on your measurements for small maze
-    #maze_min_x = 0.0
-    #maze_max_x = 3.9
-    #maze_min_y = -2.8
-    #maze_max_y = 1.6
-    # Maze boundaries for larger maze
     maze_min_x = 0
     maze_max_x = 4.4
     maze_min_y = -3.0
     maze_max_y = 1.9
 
-    # Updated to match SDF ground plane coverage
-    #maze_min_x = -4.5  # Extended from -3.8
-    #maze_max_x = 4.5   # Extended from 3.8
-    #maze_min_y = -3.0   # Adjusted from -2.9
-    #maze_max_y = 3.0    # Extended from 1.5
-
     if not (maze_min_x+0.3 <= x <= maze_max_x-0.3 and 
             maze_min_y+0.3 <= y <= maze_max_y-0.3):
         return False
-    # Definition of walls (dead zones) based on your SDF data:
-    #walls = [
-    #    (2.36565, -0.539019, 5.29645, 0.15),  # Wall_16 (small_maze_2)
-    #    (0.068925, 2.57321, 4.52249, 0.15),    # Wall_18 (small_maze_2)
-    #    (2.26396, 0.017589, 5.29645, 0.15),     # Wall_19 (small_maze_2)
-    #    (1.95518, -3.22728, 4.54012, 0.15),     # Wall_20 (small_maze_2)
-    #    (0.44035, 1.29102, 1.0, 0.15),          # Wall_22 (small_maze_2)
-    #    (1.90836, 0.051842, 3.5, 0.15),         # Wall_24 (small_maze_3)
-    #    (-0.311357, -0.695592, 2.5, 0.15),       # Wall_27 (small_maze_2)
-    #    (0.999475, -0.769438, 2.5, 0.15),        # Wall_27 (small_maze_3)
-    #]
-    # Static obstacles matching SDF structure
     walls = [
         # Vertical walls (x_center, y_center, width_x, thickness_y)
         (-3.4, 0.0, 0.2, 5.8), (3.4, 0.0, 0.2, 5.8),
@@ -591,12 +542,10 @@ def check_pos(x, y):
         # Central barriers
         (1.7, -1.0, 2.2, 0.2), (-1.7, 0.5, 0.2, 2.0)
     ]
-    
-    # Cylinder obstacles from SDF (x, y, radius)
+    # Cylinder obstacles (x, y, radius)
     cylinders = [
         (2.7, 1.1, 0.5), (-2.5, -1.8, 0.6)
     ]
-
     # Check if the (x, y) falls inside any wall's bounding box.
     # The bounding box is defined by [wall_center - (dimension/2), wall_center + (dimension/2)]
     for wx, wy, w, t in walls:
