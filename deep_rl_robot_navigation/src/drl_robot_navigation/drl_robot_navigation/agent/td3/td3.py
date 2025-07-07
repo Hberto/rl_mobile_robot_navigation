@@ -18,13 +18,13 @@ class td3(object):
         self.actor = Actor(state_dim, action_dim).to(DEVICE)
         self.actor_target = Actor(state_dim, action_dim).to(DEVICE)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters())
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
 
         # Initialize the Critic networks
         self.critic = Critic(state_dim, action_dim).to(DEVICE)
         self.critic_target = Critic(state_dim, action_dim).to(DEVICE)
         self.critic_target.load_state_dict(self.critic.state_dict())
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters())
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-4)
 
         self.max_action = max_action
         self.writer = SummaryWriter(log_dir=SUMMARY_WRITER_RUN_LOG)
