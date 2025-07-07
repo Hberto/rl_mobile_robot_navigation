@@ -20,6 +20,7 @@ def evaluate(network, epoch, env, history_size, eval_episodes=10):
 
         episode_reward = 0
         episode_actions = []
+        path_length = 0.0
 
         history_deque = deque(maxlen=history_size)
         for _ in range(history_size):
