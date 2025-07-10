@@ -40,6 +40,7 @@ class GazeboEnv(Node):
         
         self.done = False
         self.last_odom = None
+        self.previous_distance_to_goal = 0.0
 
         self.goal_x = 1
         self.goal_y = 0.0
@@ -157,13 +158,15 @@ class GazeboEnv(Node):
         v_state[:] = laser_data[:] # or laser_data.tolist()
         laser_state = [v_state]
 
+        prev_dist_to_goal = self.previous_distance_to_goal
+
         # Calculate robot heading from odometry data
         self.odom_x, self.odom_y, quaternion = self.get_current_pose()
         euler = quaternion.to_euler(degrees=False)
         angle = round(euler[2], 4)
 
         # Calculate distance to the goal from the robot
-        distance = np.linalg.norm(
+        current_distance = np.linalg.norm(
             [self.odom_x - self.goal_x, self.odom_y - self.goal_y]
         )
 
@@ -188,7 +191,7 @@ class GazeboEnv(Node):
             theta = np.pi - theta
 
         # Detect if the goal has been reached and give a large positive reward
-        if distance < GOAL_REACHED_DIST:
+        if current_distance < GOAL_REACHED_DIST:
             self.get_logger().info(f"GOAL REACHED! Target was: ({self.goal_x:.2f}, {self.goal_y:.2f})")
             target = True
             self.done = True
@@ -201,10 +204,12 @@ class GazeboEnv(Node):
         self.get_logger().info(f"Success_Rate: {self.success_rate}")
 
 
-        robot_state = [distance, theta, action[0], action[1]]
+        robot_state = [current_distance, theta, action[0], action[1]]
         state = np.append(laser_state, robot_state)
         distance_to_g = self.odom_x
-        reward= self.get_reward(target, collision, action, min_laser, distance)
+
+        reward= self.get_reward(target, collision, action, min_laser, prev_dist_to_goal)
+        self.previous_distance_to_goal = current_distance
         return state, reward, self.done, target
 
     def reset(self):
@@ -321,6 +326,7 @@ class GazeboEnv(Node):
 
         robot_state = [distance, theta, 0.0, 0.0]
         state = np.append(laser_state, robot_state)
+        self.previous_distance_to_goal = math.hypot(self.odom_x - self.goal_x, self.odom_y - self.goal_y)
         return state
 
 
@@ -476,6 +482,10 @@ class GazeboEnv(Node):
         return False, False, min_laser
 
     def get_reward(self, target, collision, action, min_laser, distance):
+
+        self.get_logger().info(f"DEBUG: target={target}, collision={collision}, action={action}, "
+                           f"min_laser={min_laser}, distance={distance}")
+        self.get_logger().info(f"DEBUG: odom=({self.odom_x}, {self.odom_y}), goal=({self.goal_x}, {self.goal_y})")
         if target:
             self.get_logger().info("reward 200")
             return 200.0
@@ -483,17 +493,37 @@ class GazeboEnv(Node):
             self.get_logger().info("reward -100")
             return -100.0
         current_dist_to_goal = math.hypot(self.odom_x - self.goal_x, self.odom_y - self.goal_y)
-        progress_reward = 10.0 * (distance - current_dist_to_goal)
+        progress_reward = distance - current_dist_to_goal
+
+        if progress_reward > 0:
+            progress_reward = 20.0 * (progress_reward ** 2) 
+        else:
+            progress_reward = 15.0 * progress_reward
+
+        skew_x = self.goal_x - self.odom_x
+        skew_y = self.goal_y - self.odom_y
+        angle_to_goal = math.atan2(skew_y, skew_x)
+        _, _, robot_quaternion = self.get_current_pose()
+        robot_yaw = robot_quaternion.to_euler(degrees=False)[2]
+        angle_diff = abs(robot_yaw - angle_to_goal)
+        alignment_reward = 0.5 * math.cos(angle_diff)
 
         obstacle_penalty = 0
-        if min_laser < 1.0:
-            obstacle_penalty = -0.5 * math.exp(-min_laser * 2)
+        if min_laser < 0.8:
+            obstacle_penalty = -0.5 * math.exp(-min_laser)
 
-        rotation_penalty = -0.1 * abs(action[1])
-
+        rotation_penalty = -0.2 * abs(action[1])
         time_penalty = -0.1
 
-        reward = progress_reward + obstacle_penalty + rotation_penalty + time_penalty
+        reward = progress_reward + obstacle_penalty + rotation_penalty + time_penalty + alignment_reward
+
+        self.get_logger().info(
+        f"REWARD DEBUG: total={reward:.2f} | "
+        f"progress={progress_reward:.2f} | "
+        f"align={alignment_reward:.2f} | "
+        f"obstacle={obstacle_penalty:.2f} | "
+        f"rotation={rotation_penalty:.2f}"
+        )
         return reward
         
     ### helpers ###    
