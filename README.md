@@ -8,11 +8,7 @@ cd ./Docker
 docker-compose up --build
 ```
 It will install:
-- Ubuntu 20.04
-- Python 3.8.10
-- Pytorch 1.10
-- ROS Noetic
-- Tensorboard
+- ToDo
 
 ## Deep Reinforcement Learning
 This [medium article](https://medium.com/@reinis_86651/deep-reinforcement-learning-in-mobile-robot-navigation-tutorial-part1-installation-d62715722303) is part of my learning journey and source of this project. The downloaded code is based on the [DRL-robot-navigation](https://github.com/reiniscimurs/DRL-robot-navigation?tab=readme-ov-file).
@@ -39,10 +35,10 @@ This project is based on the following sources:
 - [x] read paper about lstm navigation
 - [x] seperate nodes to odom, gazebo env, velodyne node
 - [x] params should be seperated or in config.yaml
-- [ ] read about transformer td3
-- [ ] impl transformer td3
-- [ ] docker ros2
-- [ ] test and evaluate transformer td3
+- [x] read about transformer td3
+- [x] impl transformer td3
+- [x] docker ros2
+- [x] test and evaluate transformer td3
 - [ ] optimize transformer td3
 
 
