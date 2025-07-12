@@ -494,35 +494,22 @@ class GazeboEnv(Node):
             return -100.0
         current_dist_to_goal = math.hypot(self.odom_x - self.goal_x, self.odom_y - self.goal_y)
         progress_reward = distance - current_dist_to_goal
+        progress_reward = 50.0 * progress_reward
 
-        if progress_reward > 0:
-            progress_reward = 20.0 * (progress_reward ** 2) 
-        else:
-            progress_reward = 15.0 * progress_reward
-
-        skew_x = self.goal_x - self.odom_x
-        skew_y = self.goal_y - self.odom_y
-        angle_to_goal = math.atan2(skew_y, skew_x)
-        _, _, robot_quaternion = self.get_current_pose()
-        robot_yaw = robot_quaternion.to_euler(degrees=False)[2]
-        angle_diff = abs(robot_yaw - angle_to_goal)
-        alignment_reward = 0.5 * math.cos(angle_diff)
 
         obstacle_penalty = 0
         if min_laser < 0.8:
-            obstacle_penalty = -0.5 * math.exp(-min_laser)
+            obstacle_penalty = -0.5 * 1 - (min_laser / 0.5)
 
         rotation_penalty = -0.2 * abs(action[1])
-        time_penalty = -0.1
+        linear_velocity_penalty = -0.05 * action[0]
 
-        reward = progress_reward + obstacle_penalty + rotation_penalty + time_penalty + alignment_reward
+        reward = progress_reward + obstacle_penalty + rotation_penalty + linear_velocity_penalty
 
         self.get_logger().info(
         f"REWARD DEBUG: total={reward:.2f} | "
         f"progress={progress_reward:.2f} | "
-        f"align={alignment_reward:.2f} | "
         f"obstacle={obstacle_penalty:.2f} | "
-        f"rotation={rotation_penalty:.2f}"
         )
         return reward
         
