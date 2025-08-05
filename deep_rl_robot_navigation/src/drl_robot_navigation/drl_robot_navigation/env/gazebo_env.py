@@ -22,7 +22,7 @@ import sensor_msgs_py.point_cloud2 as pc2
 
 #import point_cloud2 as pc2
 
-from config.config import TIME_DELTA, GOAL_REACHED_DIST, COLLISION_DIST, ENVIRONMENT_DIM
+from config.config import TIME_DELTA, GOAL_REACHED_DIST, COLLISION_DIST, ENVIRONMENT_DIM, MAX_EP
 
 
 #TODO: change goal move to another script
@@ -47,7 +47,8 @@ class GazeboEnv(Node):
 
         self.success_rate = 0.0  
         self.successful_episodes = 0 
-        self.total_episodes = 0       
+        self.total_episodes = 0  
+        self.current_episode = 0     
 
         self.upper = 1.5
         self.lower = -1.5
@@ -494,17 +495,33 @@ class GazeboEnv(Node):
             return -100.0
         current_dist_to_goal = math.hypot(self.odom_x - self.goal_x, self.odom_y - self.goal_y)
         progress_reward = distance - current_dist_to_goal
-        progress_reward = 50.0 * progress_reward
+        progress_reward = 40.0 * progress_reward
 
 
-        obstacle_penalty = 0
-        if min_laser < 0.8:
-            obstacle_penalty = -0.5 * 1 - (min_laser / 0.5)
+        #obstacle_penalty = self.obstacle_penalty(
+        #d_min=min_laser,
+        #episode=self.current_episode,       
+        #MaxEpisodes=MAX_EP,    
+        #A_init=6.0,
+        #A_final=0.3,
+        #k=3.5,
+        #d0=0.75
+        #)
 
-        rotation_penalty = -0.2 * abs(action[1])
-        linear_velocity_penalty = -0.05 * action[0]
+        d0 = 0.75 
+        if min_laser <= d0:
+            obstacle_penalty = -1.0 * (d0 - min_laser)
+        else:
+            obstacle_penalty = 0.0
 
-        reward = progress_reward + obstacle_penalty + rotation_penalty + linear_velocity_penalty
+        #obstacle_penalty = 0
+        #if min_laser < 0.8:
+        #    obstacle_penalty = -0.5 * 1 - (min_laser / 0.5)
+
+        #rotation_penalty = -0.2 * abs(action[1])
+        #linear_velocity_penalty = -0.05 * action[0]
+
+        reward = progress_reward + obstacle_penalty
 
         self.get_logger().info(
         f"REWARD DEBUG: total={reward:.2f} | "
@@ -512,6 +529,16 @@ class GazeboEnv(Node):
         f"obstacle={obstacle_penalty:.2f} | "
         )
         return reward
+
+    def obstacle_penalty(self, d_min, episode, MaxEpisodes, A_init=10.0, A_final=1.0, k=5.0, d0=0.8):
+        tau = min(episode / MaxEpisodes, 1.0)
+        # Adaptive penalty
+        A = A_init * (1 - tau) + A_final * tau
+        # exponential penalty if d_min < d0
+        if d_min < d0:
+            return -A * math.exp(-k * (d_min - d0))
+        else:
+            return 0.0
         
     ### helpers ###    
     def get_current_pose(self):
