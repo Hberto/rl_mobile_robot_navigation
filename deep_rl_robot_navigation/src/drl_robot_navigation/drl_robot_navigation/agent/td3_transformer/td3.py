@@ -23,7 +23,7 @@ class td3(object):
             state_dim, action_dim, history_size, model_dim, nhead, num_encoder_layers
         ).to(DEVICE)
         self.actor_target.load_state_dict(self.actor.state_dict())
-        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=3e-4)
+        self.actor_optimizer = torch.optim.Adam(self.actor.parameters(), lr=1e-4)
 
         # Initialize the Critic networks
         self.critic = Critic(
@@ -33,7 +33,7 @@ class td3(object):
             state_dim, action_dim, history_size, model_dim, nhead, num_encoder_layers
         ).to(DEVICE)
         self.critic_target.load_state_dict(self.critic.state_dict())
-        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=3e-4)
+        self.critic_optimizer = torch.optim.Adam(self.critic.parameters(), lr=1e-4)
 
         self.max_action = max_action
         self.writer = SummaryWriter(log_dir=SUMMARY_WRITER_RUN_LOG)
@@ -98,6 +98,7 @@ class td3(object):
             # Perform the gradient descent and update
             self.critic_optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.critic.parameters(), 1.0)
             self.critic_optimizer.step()
 
             if it % policy_freq == 0:
@@ -105,10 +106,14 @@ class td3(object):
                 # (essentially perform gradient ascent)t
                 actor_action = self.actor(state, history)
                 actor_loss = -self.critic.Q1(state, actor_action, history).mean()
+                #q_value = torch.min(self.critic.Q1(state, actor_action, history),
+                                 #self.critic.Q2(state, actor_action, history))
+                #actor_loss = -q_value.mean()
 
                 # Actor-Update
                 self.actor_optimizer.zero_grad()
                 actor_loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.actor.parameters(), 0.5)
                 self.actor_optimizer.step()
 
                 # Use soft update to update the actor-target network parameters by
