@@ -130,6 +130,7 @@ def main():
                         episode_reward = 0
                         episode_timesteps = 0
                         episode_num += 1
+                        env.current_episode = episode_num
                         
                         history_deque.clear()
                         for _ in range(config.HISTORY_LENGTH):
