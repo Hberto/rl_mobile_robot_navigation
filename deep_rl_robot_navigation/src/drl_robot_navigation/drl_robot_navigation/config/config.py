@@ -4,7 +4,7 @@ ROOT = os.path.dirname(os.path.dirname(__file__))
 # Hyperparameters
 
 # === Training ===
-BATCH_SIZE = 64  # Mini-batch size
+BATCH_SIZE = 128  # Mini-batch size
 
 # === TD3 Hyperparameter ===
 DISCOUNT = 0.99  # Discount factor
@@ -20,9 +20,14 @@ EXPL_MIN = 0.1  # Exploration noise after decay
 
 # === Environment- und Model architecture ===
 HISTORY_LENGTH = 40 # Saving the last 40 states
-MODEL_DIM = 256
-N_HEADS = 4
-N_ENCODER_LAYERS = 2
+# RUN 11
+#MODEL_DIM = 384
+#N_HEADS = 12
+#N_ENCODER_LAYERS = 6
+
+MODEL_DIM = 336
+N_HEADS = 12
+N_ENCODER_LAYERS = 5
 
 # === Runtime- und Memory Config ===
 MAX_TIMESTEPS = 5e6  # Maximum number of steps to perform
