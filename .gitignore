@@ -27,4 +27,5 @@ share/
 deep_rl_robot_navigation/src/drl_robot_navigation/drl_robot_navigation/nodes/training.template.py
 
 # ========== TensorBoard / Evaluation ==========
-evaluation/run/events.out.tfevents*
+deep_rl_robot_navigation/src/drl_robot_navigation/drl_robot_navigation/evaluation/models/**
+deep_rl_robot_navigation/src/drl_robot_navigation/drl_robot_navigation/evaluation/run/**
