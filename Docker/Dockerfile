@@ -23,7 +23,7 @@ RUN apt-get update && apt-get install -y \
 
 
 
-# Install TensorBoard and PyTorch and other Pip packages
+# Install TensorBoard and PyTorch (Cuda 12.1) and other Pip packages
 RUN pip3 install --no-cache-dir \
     squaternion \
     numpy \
@@ -33,6 +33,7 @@ RUN pip3 install --no-cache-dir \
 # Create workspace
 WORKDIR /ros2_ws
 
+# Source ROS2 env, initializes rosdep and updates rosdep sources
 RUN . /opt/ros/humble/setup.sh && \
     if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
     rosdep update
