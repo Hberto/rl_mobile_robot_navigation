@@ -1,14 +1,12 @@
-# Dockerfile
-FROM ubuntu:20.04
+FROM osrf/ros:humble-desktop
 
-# Prevent interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Update and install essential dependencies
 RUN apt-get update && apt-get install -y \
-    python3.8 \
     python3-pip \
-    python3.8-venv \
+    python3-colcon-common-extensions \
+    ros-humble-gazebo-ros-pkgs \
     wget \
     git \
     build-essential \
@@ -16,50 +14,29 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     curl \
     gnupg2 \
+    xterm \
+    tmux \
+    dbus-x11 \
+    xdg-utils \
     lsb-release \
-    locales && \
-    locale-gen en_US.UTF-8
+    && rm -rf /var/lib/apt/lists/*
 
-# Set locale
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
 
-# Install ROS Noetic
-RUN echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list && \
-    curl -sSL http://repo.ros2.org/repos.key | apt-key add - && \
-    apt-get update && \
-    apt-get install -y ros-noetic-desktop-full && \
-    echo "source /opt/ros/noetic/setup.bash" >> ~/.bashrc && \
-    /bin/bash -c "source /opt/ros/noetic/setup.bash"
 
-# Install TensorBoard and PyTorch
+# Install TensorBoard and PyTorch (Cuda 12.1) and other Pip packages
 RUN pip3 install --no-cache-dir \
+    squaternion \
+    numpy \
     tensorboard \
-    torch==1.10.0 \
-    torchvision==0.11.1 \
-    torchaudio==0.10.0
+    torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu121
 
 # Create workspace
-WORKDIR /catkin_ws
-RUN mkdir -p src
+WORKDIR /ros2_ws
 
-# Setup environment variables
-ENV ROS_HOSTNAME=localhost \
-    ROS_MASTER_URI=http://localhost:11311 \
-    ROS_PORT_SIM=11311 \
-    GAZEBO_RESOURCE_PATH=~/DRL-robot-navigation/catkin_ws/src/multi_robot_scenario/launch
-
-RUN pip3 install squaternion    
-
-RUN apt-get install -y \ 
-    libgl1-mesa-glx \ 
-    libgl1-mesa-dri \ 
-    mesa-utils \
-    x11-xserver-utils
-
-# Expose necessary ports
-EXPOSE 11311 6006
+# Source ROS2 env, initializes rosdep and updates rosdep sources
+RUN . /opt/ros/humble/setup.sh && \
+    if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then rosdep init; fi && \
+    rosdep update
 
 # Entry point
 CMD ["/bin/bash"]
