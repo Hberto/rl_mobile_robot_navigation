@@ -3,9 +3,9 @@
 <package format="3">
   <name>drl_robot_navigation</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
-  <maintainer email="herberto.werner@yahoo.com">ubuntu</maintainer>
-  <license>TODO: License declaration</license>
+  <description>Deep RL (TD3 / Transformer-TD3) for mobile robot navigation in ROS 2 + Gazebo.</description>
+  <maintainer email="Hberto@users.noreply.github.com">Hberto</maintainer>
+  <license>MIT</license>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

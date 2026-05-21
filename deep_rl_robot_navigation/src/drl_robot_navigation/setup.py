@@ -47,10 +47,10 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='ubuntu',
-    maintainer_email='herberto.werner@yahoo.com',
-    description='TODO: Package description',
-    license='TODO: License declaration',
+    maintainer='Hberto',
+    maintainer_email='Hberto@users.noreply.github.com',
+    description='Deep RL (TD3 / Transformer-TD3) for mobile robot navigation in ROS 2 + Gazebo.',
+    license='MIT',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
