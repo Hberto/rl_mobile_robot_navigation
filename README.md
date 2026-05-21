@@ -1,4 +1,19 @@
-# Deep RL Mobile Robot Navigation
+<h1 align="center">Deep RL Mobile Robot Navigation</h1>
+<h3 align="center">TD3 &amp; Transformer-TD3 for Goal-Driven Navigation in ROS 2 + Gazebo</h3>
+
+<p align="center">
+  <em>A differential-drive robot with a Velodyne 3D LiDAR learns to navigate toward a goal while
+  avoiding obstacles, trained end-to-end in simulation.</em>
+</p>
+
+<p align="center">
+  <a href="https://docs.ros.org/en/humble/"><img src="https://img.shields.io/badge/ROS_2-Humble-22314E?style=flat-square&logo=ros&logoColor=white" alt="ROS 2 Humble"/></a>
+  <img src="https://img.shields.io/badge/Gazebo-Classic-FF6C00?style=flat-square&logo=gazebo&logoColor=white" alt="Gazebo Classic"/>
+  <img src="https://img.shields.io/badge/PyTorch-CUDA_12.1-EE4C2C?style=flat-square&logo=pytorch&logoColor=white" alt="PyTorch"/>
+  <img src="https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.10"/>
+  <img src="https://img.shields.io/badge/Docker-ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-3DA639?style=flat-square" alt="License: MIT"/></a>
+</p>
 
 Training and evaluation of a **Deep Reinforcement Learning** agent for mobile robot navigation in
 ROS 2 + Gazebo. A differential-drive robot equipped with a Velodyne 3D LiDAR learns to navigate
